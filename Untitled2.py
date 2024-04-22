@@ -90,7 +90,7 @@ def get_video_info(video_url):
     try:
         match = re.search(r"watch\?v=(\S+)", video_url)
         video_id = match.group(1)
-        api_key = 'AIzaSyAl32SxMZSpMjq5qVnkFiIwbotbyPo8fYo'  # Replace with your actual YouTube Data API key
+        api_key = 'API_KEY'  # Replace with your actual YouTube Data API key
         endpoint = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={api_key}&part=snippet'
         response = requests.get(endpoint)
         response.raise_for_status()
