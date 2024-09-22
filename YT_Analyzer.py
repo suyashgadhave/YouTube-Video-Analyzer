@@ -11,8 +11,31 @@ import os
 # Load environment variables from .env file
 load_dotenv()
 
-# Get API key from environment variable
-YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
+# Set up Streamlit app
+st.set_page_config(page_title="YouTube Video Analyzer", layout="centered")
+
+# Custom styling for the app
+st.markdown(
+    """
+    <style>
+    .title {
+        font-size: 35px;
+        font-weight: bold;
+        color: #2C3E50;
+    }
+    .subheading {
+        font-size: 22px;
+        color: #34495E;
+    }
+    .box {
+        border: 1px solid #D5DBDB;
+        border-radius: 5px;
+        padding: 10px;
+        background-color: #F8F9F9;
+    }
+    </style>
+    """, unsafe_allow_html=True
+)
 
 # Function to translate the title
 def translate_title(video_title):
@@ -102,14 +125,12 @@ def get_video_info(video_url):
         video_id = match.group(1)
 
         # Define your API key and endpoint
-        api_key = YOUTUBE_API_KEY
+        api_key = os.getenv('YOUTUBE_API_KEY')  # API Key from environment variable
         endpoint = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={api_key}&part=snippet'
 
-        # Make the API request
-        response = requests.get(endpoint)
+        response = requests.get(endpoint, verify=False)
         response.raise_for_status()  # Raises an HTTPError for bad responses
 
-        # Process the response JSON
         video_info = response.json()
         title = video_info['items'][0]['snippet']['title']
         description = video_info['items'][0]['snippet']['description']
@@ -119,7 +140,7 @@ def get_video_info(video_url):
         return None, None, None, None
 
 # Streamlit UI
-st.title("YouTube Video Analyzer")
+st.markdown('<h1 class="title">YouTube Video Analyzer</h1>', unsafe_allow_html=True)
 
 # Input field for YouTube video URL
 video_url = st.text_input("Enter YouTube video URL:")
@@ -127,31 +148,44 @@ video_url = st.text_input("Enter YouTube video URL:")
 # Button to trigger analysis
 if st.button("Analyze"):
     if video_url:
-        # Analyze video information
-        video_id, title, description, api_key = get_video_info(video_url)
-        if title and description:
-            st.write(f"**Title:** {title}")
-            st.write(f"**Description:** {description}")
-            
-            # Translate the title
-            translated_title_mr, translated_title_hi, translated_title_en = translate_title(title)
-            if translated_title_mr and translated_title_hi and translated_title_en:
-                st.write("**Translated Titles:**")
-                st.write(f"Marathi: {translated_title_mr}")
-                st.write(f"Hindi: {translated_title_hi}")
-                st.write(f"English: {translated_title_en}")
-            else:
-                st.error("Failed to translate title.")
+        # Add a progress spinner
+        with st.spinner("Analyzing video..."):
+            # Analyze video information
+            video_id, title, description, api_key = get_video_info(video_url)
+            if title and description:
+                st.markdown(f'<h2 class="subheading">Video Information</h2>', unsafe_allow_html=True)
+                st.write(f"**Title:** {title}")
+                st.write(f"**Description:** {description}")
+                
+                # Translate the title
+                st.markdown(f'<h2 class="subheading">Translated Titles</h2>', unsafe_allow_html=True)
+                translated_title_mr, translated_title_hi, translated_title_en = translate_title(title)
+                if translated_title_mr and translated_title_hi and translated_title_en:
+                    st.write(f"**Marathi:** {translated_title_mr}")
+                    st.write(f"**Hindi:** {translated_title_hi}")
+                    st.write(f"**English:** {translated_title_en}")
+                else:
+                    st.error("Failed to translate title.")
 
-            # Get comments for the video
-            comments = get_video_comments(video_id, api_key)
-            if comments:
-                st.write("**Sentiment Analysis Results:**")
-                sentiment_analysis = analyze_sentiment(comments)
-                st.write(f"Positive: {sentiment_analysis['positive']:.2f}%")
-                st.write(f"Negative: {sentiment_analysis['negative']:.2f}%")
-                st.write(f"Neutral: {sentiment_analysis['neutral']:.2f}%")
+                # Get comments for the video
+                comments = get_video_comments(video_id, api_key)
+                if comments:
+                    st.markdown(f'<h2 class="subheading">Sentiment Analysis</h2>', unsafe_allow_html=True)
+                    sentiment_analysis = analyze_sentiment(comments)
+                    
+                    # Display sentiment results with Streamlit's metric component
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Positive", f"{sentiment_analysis['positive']:.2f}%")
+                    col2.metric("Negative", f"{sentiment_analysis['negative']:.2f}%")
+                    col3.metric("Neutral", f"{sentiment_analysis['neutral']:.2f}%")
+                    
+                    # Optionally, display all comments
+                    with st.expander("Show comments"):
+                        for comment in comments:
+                            st.write(comment)
+                else:
+                    st.warning("No comments available for sentiment analysis.")
             else:
-                st.warning("No comments available for sentiment analysis.")
-        else:
-            st.error("Failed to retrieve video information.")
+                st.error("Failed to retrieve video information.")
+    else:
+        st.warning("Please enter a valid YouTube video URL.")
