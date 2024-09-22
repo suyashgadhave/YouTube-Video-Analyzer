@@ -24,22 +24,14 @@ st.markdown(
         color: #2C3E50;
     }
     .subheading {
-        font-size: 24px;
+        font-size: 22px;
         color: #34495E;
-        margin-top: 20px;
     }
     .box {
         border: 1px solid #D5DBDB;
         border-radius: 5px;
-        padding: 15px;
+        padding: 10px;
         background-color: #F8F9F9;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        margin-bottom: 20px;
-    }
-    .metric {
-        font-size: 20px;
-        font-weight: bold;
-        color: #2980B9;
     }
     </style>
     """, unsafe_allow_html=True
@@ -69,6 +61,7 @@ def get_video_comments(video_id, api_key):
     try:
         max_results = 100
         comments = []
+
         endpoint = f'https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId={video_id}&key={api_key}&maxResults={max_results}'
         response = requests.get(endpoint)
         response.raise_for_status()
@@ -125,14 +118,19 @@ def analyze_sentiment(comments):
 # Function to get video info
 def get_video_info(video_url):
     try:
+        # Extract the video ID from the URL
         match = re.search(r"watch\?v=(\S+)", video_url)
         if not match:
             raise ValueError("Invalid YouTube URL provided.")
         video_id = match.group(1)
-        api_key = os.getenv('YOUTUBE_API_KEY')
+
+        # Define your API key and endpoint
+        api_key = os.getenv('YOUTUBE_API_KEY')  # API Key from environment variable
         endpoint = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={api_key}&part=snippet'
+
         response = requests.get(endpoint, verify=False)
-        response.raise_for_status()
+        response.raise_for_status()  # Raises an HTTPError for bad responses
+
         video_info = response.json()
         title = video_info['items'][0]['snippet']['title']
         description = video_info['items'][0]['snippet']['description']
@@ -150,7 +148,9 @@ video_url = st.text_input("Enter YouTube video URL:")
 # Button to trigger analysis
 if st.button("Analyze"):
     if video_url:
+        # Add a progress spinner
         with st.spinner("Analyzing video..."):
+            # Analyze video information
             video_id, title, description, api_key = get_video_info(video_url)
             if title and description:
                 
@@ -158,18 +158,15 @@ if st.button("Analyze"):
                 comments = get_video_comments(video_id, api_key)
                 
                 # Sentiment Analysis - Display at the top
-                st.markdown(f'<div class="box"><h2 class="subheading">Sentiment Analysis</h2></div>', unsafe_allow_html=True)
+                st.markdown(f'<h2 class="subheading">Sentiment Analysis</h2>', unsafe_allow_html=True)
                 if comments:
                     sentiment_analysis = analyze_sentiment(comments)
                     
-                    # Display sentiment results with styled metrics
+                    # Display sentiment results with Streamlit's metric component
                     col1, col2, col3 = st.columns(3)
-                    with col1:
-                        st.metric("Positive", f"{sentiment_analysis['positive']:.2f}%", help="Percentage of positive comments")
-                    with col2:
-                        st.metric("Negative", f"{sentiment_analysis['negative']:.2f}%", help="Percentage of negative comments")
-                    with col3:
-                        st.metric("Neutral", f"{sentiment_analysis['neutral']:.2f}%", help="Percentage of neutral comments")
+                    col1.metric("Positive", f"{sentiment_analysis['positive']:.2f}%")
+                    col2.metric("Negative", f"{sentiment_analysis['negative']:.2f}%")
+                    col3.metric("Neutral", f"{sentiment_analysis['neutral']:.2f}%")
                     
                     # Optionally, display all comments
                     with st.expander("Show comments"):
@@ -179,7 +176,7 @@ if st.button("Analyze"):
                     st.warning("No comments available for sentiment analysis.")
                 
                 # Translation - Display after Sentiment Analysis
-                st.markdown(f'<div class="box"><h2 class="subheading">Translated Titles</h2></div>', unsafe_allow_html=True)
+                st.markdown(f'<h2 class="subheading">Translated Titles</h2>', unsafe_allow_html=True)
                 translated_title_mr, translated_title_hi, translated_title_en = translate_title(title)
                 if translated_title_mr and translated_title_hi and translated_title_en:
                     st.write(f"**Marathi:** {translated_title_mr}")
@@ -189,7 +186,7 @@ if st.button("Analyze"):
                     st.error("Failed to translate title.")
                 
                 # Video Information - Display after Translation
-                st.markdown(f'<div class="box"><h2 class="subheading">Video Information</h2></div>', unsafe_allow_html=True)
+                st.markdown(f'<h2 class="subheading">Video Information</h2>', unsafe_allow_html=True)
                 st.write(f"**Title:** {title}")
                 
                 # Description with "Show more" if long
