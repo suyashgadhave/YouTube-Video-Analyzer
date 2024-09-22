@@ -5,7 +5,6 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 from textblob import TextBlob
 import streamlit as st
-import matplotlib.pyplot as plt
 from dotenv import load_dotenv
 import os
 
@@ -155,10 +154,6 @@ if st.button("Analyze"):
             video_id, title, description, api_key = get_video_info(video_url)
             if title and description:
                 
-                # YouTube Video Embed - Play button
-                st.markdown(f'<h2 class="subheading">YouTube Video</h2>', unsafe_allow_html=True)
-                st.video(f"https://www.youtube.com/watch?v={video_id}")
-                
                 # Get comments for the video
                 comments = get_video_comments(video_id, api_key)
                 
@@ -167,14 +162,11 @@ if st.button("Analyze"):
                 if comments:
                     sentiment_analysis = analyze_sentiment(comments)
                     
-                    # Display sentiment results as a pie chart
-                    labels = ['Positive', 'Negative', 'Neutral']
-                    sizes = [sentiment_analysis['positive'], sentiment_analysis['negative'], sentiment_analysis['neutral']]
-                    colors = ['#2ecc71', '#e74c3c', '#f1c40f']
-                    fig, ax = plt.subplots()
-                    ax.pie(sizes, labels=labels, colors=colors, autopct='%1.1f%%', startangle=90)
-                    ax.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
-                    st.pyplot(fig)
+                    # Display sentiment results with Streamlit's metric component
+                    col1, col2, col3 = st.columns(3)
+                    col1.metric("Positive", f"{sentiment_analysis['positive']:.2f}%")
+                    col2.metric("Negative", f"{sentiment_analysis['negative']:.2f}%")
+                    col3.metric("Neutral", f"{sentiment_analysis['neutral']:.2f}%")
                     
                     # Optionally, display all comments
                     with st.expander("Show comments"):
