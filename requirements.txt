@@ -1,6 +1,7 @@
-python-dotenv
-nltk
-textblob
-googletrans==4.0.0-rc1
-requests
-streamlit
+streamlit==1.23.0
+matplotlib==3.5.2
+textblob==0.17.1
+nltk==3.7
+googletrans==4.0.0rc1
+requests==2.28.1
+python-dotenv==1.0.0
