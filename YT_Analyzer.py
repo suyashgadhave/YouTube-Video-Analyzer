@@ -153,24 +153,13 @@ if st.button("Analyze"):
             # Analyze video information
             video_id, title, description, api_key = get_video_info(video_url)
             if title and description:
-                st.markdown(f'<h2 class="subheading">Video Information</h2>', unsafe_allow_html=True)
-                st.write(f"**Title:** {title}")
-                st.write(f"**Description:** {description}")
                 
-                # Translate the title
-                st.markdown(f'<h2 class="subheading">Translated Titles</h2>', unsafe_allow_html=True)
-                translated_title_mr, translated_title_hi, translated_title_en = translate_title(title)
-                if translated_title_mr and translated_title_hi and translated_title_en:
-                    st.write(f"**Marathi:** {translated_title_mr}")
-                    st.write(f"**Hindi:** {translated_title_hi}")
-                    st.write(f"**English:** {translated_title_en}")
-                else:
-                    st.error("Failed to translate title.")
-
                 # Get comments for the video
                 comments = get_video_comments(video_id, api_key)
+                
+                # Sentiment Analysis - Display at the top
+                st.markdown(f'<h2 class="subheading">Sentiment Analysis</h2>', unsafe_allow_html=True)
                 if comments:
-                    st.markdown(f'<h2 class="subheading">Sentiment Analysis</h2>', unsafe_allow_html=True)
                     sentiment_analysis = analyze_sentiment(comments)
                     
                     # Display sentiment results with Streamlit's metric component
@@ -185,6 +174,27 @@ if st.button("Analyze"):
                             st.write(comment)
                 else:
                     st.warning("No comments available for sentiment analysis.")
+                
+                # Translation - Display after Sentiment Analysis
+                st.markdown(f'<h2 class="subheading">Translated Titles</h2>', unsafe_allow_html=True)
+                translated_title_mr, translated_title_hi, translated_title_en = translate_title(title)
+                if translated_title_mr and translated_title_hi and translated_title_en:
+                    st.write(f"**Marathi:** {translated_title_mr}")
+                    st.write(f"**Hindi:** {translated_title_hi}")
+                    st.write(f"**English:** {translated_title_en}")
+                else:
+                    st.error("Failed to translate title.")
+                
+                # Video Information - Display after Translation
+                st.markdown(f'<h2 class="subheading">Video Information</h2>', unsafe_allow_html=True)
+                st.write(f"**Title:** {title}")
+                
+                # Description with "Show more" if long
+                if len(description) > 300:
+                    with st.expander("Show Video Description"):
+                        st.write(description)
+                else:
+                    st.write(f"**Description:** {description}")
             else:
                 st.error("Failed to retrieve video information.")
     else:
