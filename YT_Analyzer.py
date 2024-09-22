@@ -5,6 +5,14 @@ from nltk import word_tokenize
 from nltk.corpus import stopwords
 from textblob import TextBlob
 import streamlit as st
+from dotenv import load_dotenv
+import os
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get API key from environment variable
+YOUTUBE_API_KEY = os.getenv('YOUTUBE_API_KEY')
 
 # Function to translate the title
 def translate_title(video_title):
@@ -94,11 +102,11 @@ def get_video_info(video_url):
         video_id = match.group(1)
 
         # Define your API key and endpoint
-        api_key = 'AIzaSyAl32SxMZSpMjq5qVnkFiIwbotbyPo8fYo'  # Replace with your actual YouTube Data API key
+        api_key = YOUTUBE_API_KEY
         endpoint = f'https://www.googleapis.com/youtube/v3/videos?id={video_id}&key={api_key}&part=snippet'
 
-        # Make the API request with SSL verification disabled (for testing purposes only)
-        response = requests.get(endpoint, verify=False)
+        # Make the API request
+        response = requests.get(endpoint)
         response.raise_for_status()  # Raises an HTTPError for bad responses
 
         # Process the response JSON
